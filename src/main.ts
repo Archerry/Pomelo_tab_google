@@ -13,6 +13,7 @@ let siteUsage: Record<string, UsageEntry> = {}
 let activeView: ViewName = 'tabs'
 let librarySearch = ''
 let usagePeriod: '7' | '30' | 'all' = '7'
+let editingShortcutId: string | null = null
 const usageKey = 'pomelo-site-usage-v1'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
@@ -199,7 +200,8 @@ function commandItems(query = ''): CommandItem[] {
 
 function commandMarkup(query = '') {
   const items = commandItems(query)
-  return items.length ? items.map((item, index) => `<button class="command-item ${index === 0 ? 'selected' : ''}" data-command-index="${index}"><span class="command-kind">${item.kind}</span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></span><kbd>↵</kbd></button>`).join('') : '<div class="command-empty">No results</div>'
+  const kindIcon = (kind: string) => kind === 'TAB' ? icon('tabs') : kind === 'BOOKMARK' ? icon('bookmark') : kind === 'HISTORY' ? icon('history') : kind === 'SHORTCUT' ? icon('grid') : icon('spark')
+  return items.length ? items.map((item, index) => `<button class="command-item kind-${item.kind.toLowerCase()} ${index === 0 ? 'selected' : ''}" data-command-index="${index}"><span class="command-kind">${kindIcon(item.kind)}<em>${item.kind}</em></span><span><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.meta)}</small></span><kbd>↵</kbd></button>`).join('') : '<div class="command-empty">No results</div>'
 }
 
 function render() {
@@ -232,7 +234,7 @@ function render() {
         </form>
         <div class="quick-bar">
           <span class="quick-label">Quick access</span>
-          ${state.shortcuts.map(item => `<a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 32))}" alt=""/></span><strong>${escapeHtml(item.name)}</strong></a>`).join('')}
+          ${state.shortcuts.map(item => `<div class="quick-item"><a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 32))}" alt=""/></span><strong>${escapeHtml(item.name)}</strong></a><span class="quick-actions"><button data-edit-shortcut="${item.id}" title="Edit ${escapeHtml(item.name)}">${icon('settings')}</button><button data-delete-shortcut="${item.id}" title="Delete ${escapeHtml(item.name)}">${icon('trash')}</button></span></div>`).join('')}
           <button id="add-shortcut" class="quick-add" title="Add shortcut">${icon('plus')}</button>
         </div>
       </section>
@@ -246,7 +248,7 @@ function render() {
       </section>
     </main>
 
-    <dialog id="shortcut-dialog"><form id="shortcut-form" novalidate><div class="dialog-head"><div><span class="eyebrow">NEW SHORTCUT</span><h2>Add shortcut</h2></div><button type="button" data-close-dialog="shortcut-dialog" class="close" aria-label="Close">×</button></div><label>Name<input name="name" maxlength="20" required placeholder="e.g. GitHub"/><small class="field-error" aria-live="polite"></small></label><label>URL<input name="url" inputmode="url" required placeholder="https://example.com"/><small class="field-error" aria-live="polite"></small></label><div class="dialog-actions"><button type="button" data-close-dialog="shortcut-dialog" class="secondary">Cancel</button><button type="submit" id="save-shortcut">Save</button></div></form></dialog>
+    <dialog id="shortcut-dialog"><form id="shortcut-form" novalidate><div class="dialog-head"><div><span class="eyebrow" id="shortcut-mode">NEW SHORTCUT</span><h2 id="shortcut-title">Add shortcut</h2></div><button type="button" data-close-dialog="shortcut-dialog" class="close" aria-label="Close">×</button></div><label>Name<input name="name" maxlength="20" required placeholder="e.g. GitHub"/><small class="field-error" aria-live="polite"></small></label><label>URL<input name="url" inputmode="url" required placeholder="https://example.com"/><small class="field-error" aria-live="polite"></small></label><div class="dialog-actions"><button type="button" data-close-dialog="shortcut-dialog" class="secondary">Cancel</button><button type="submit" id="save-shortcut">Save</button></div></form></dialog>
     <dialog id="settings-dialog"><form id="settings-form"><div class="dialog-head"><div><span class="eyebrow">PREFERENCES</span><h2>Settings</h2></div><button type="button" data-close-dialog="settings-dialog" class="close" aria-label="Close">×</button></div><label>Your name<input name="name" maxlength="20" value="${escapeHtml(state.name)}" placeholder="Used in the greeting"/></label><section class="danger-zone"><div><strong>Browsing usage</strong><small>Delete all locally stored site usage statistics.</small></div><button type="button" id="clear-usage">Clear data</button></section><div class="dialog-actions"><button type="button" data-close-dialog="settings-dialog" class="secondary">Cancel</button><button type="submit" id="save-settings">Save</button></div></form></dialog>
     <dialog id="command-dialog" class="command-dialog"><div class="command-box"><div class="command-input">${icon('search')}<input id="command-input" autocomplete="off" placeholder="Search tabs, bookmarks, history and shortcuts"/><kbd>ESC</kbd></div><div class="command-results" id="command-results">${commandMarkup()}</div><footer><span>↑↓ Navigate</span><span>↵ Open</span><span>ESC Close</span></footer></div></dialog>
   `
@@ -263,11 +265,21 @@ function bindEvents() {
   })
   document.querySelector('#settings')?.addEventListener('click', () => (document.querySelector('#settings-dialog') as HTMLDialogElement).showModal())
   document.querySelector('#command-trigger')?.addEventListener('click', openCommand)
-  document.querySelector('#add-shortcut')?.addEventListener('click', () => (document.querySelector('#shortcut-dialog') as HTMLDialogElement).showModal())
+  document.querySelector('#add-shortcut')?.addEventListener('click', () => openShortcutDialog())
+  document.querySelectorAll<HTMLElement>('[data-edit-shortcut]').forEach(button => button.addEventListener('click', () => {
+    const item = state.shortcuts.find(shortcut => shortcut.id === button.dataset.editShortcut)
+    if (item) openShortcutDialog(item)
+  }))
+  document.querySelectorAll<HTMLElement>('[data-delete-shortcut]').forEach(button => button.addEventListener('click', async () => {
+    const item = state.shortcuts.find(shortcut => shortcut.id === button.dataset.deleteShortcut)
+    if (!item || !window.confirm(`Delete “${item.name}” from Quick Access?`)) return
+    state.shortcuts = state.shortcuts.filter(shortcut => shortcut.id !== item.id)
+    await saveState(state); render()
+  }))
   document.querySelectorAll<HTMLElement>('[data-close-dialog]').forEach(button => button.addEventListener('click', () => {
     const dialog = document.querySelector<HTMLDialogElement>(`#${button.dataset.closeDialog}`)
     const form = dialog?.querySelector<HTMLFormElement>('form')
-    form?.reset(); clearFormErrors(form); dialog?.close()
+    form?.reset(); clearFormErrors(form); editingShortcutId = null; dialog?.close()
   }))
   document.querySelectorAll<HTMLElement>('[data-view]').forEach(button => button.addEventListener('click', () => {
     activeView = button.dataset.view as ViewName; librarySearch = ''; render()
@@ -330,7 +342,10 @@ function bindEvents() {
     const data = new FormData(form); let url = String(data.get('url')).trim()
     if (!/^https?:\/\//i.test(url)) url = `https://${url}`
     const colors = ['#e75b4f', '#566d89', '#6f8054', '#8b6658', '#695c8e']
-    state.shortcuts.push({ id: crypto.randomUUID(), name: String(data.get('name')).trim(), url, color: colors[state.shortcuts.length % colors.length] })
+    const existing = state.shortcuts.find(item => item.id === editingShortcutId)
+    if (existing) { existing.name = String(data.get('name')).trim(); existing.url = url }
+    else state.shortcuts.push({ id: crypto.randomUUID(), name: String(data.get('name')).trim(), url, color: colors[state.shortcuts.length % colors.length] })
+    editingShortcutId = null
     await saveState(state); (document.querySelector('#shortcut-dialog') as HTMLDialogElement)?.close(); render()
   })
   document.querySelector('#settings-form')?.addEventListener('submit', async event => {
@@ -344,6 +359,19 @@ function bindEvents() {
 function clearFormErrors(form?: HTMLFormElement | null) {
   form?.querySelectorAll<HTMLInputElement>('input').forEach(input => { input.setCustomValidity(''); input.removeAttribute('aria-invalid') })
   form?.querySelectorAll<HTMLElement>('.field-error').forEach(error => { error.textContent = '' })
+}
+
+function openShortcutDialog(item?: AppState['shortcuts'][number]) {
+  const dialog = document.querySelector<HTMLDialogElement>('#shortcut-dialog')
+  const form = document.querySelector<HTMLFormElement>('#shortcut-form')
+  if (!dialog || !form) return
+  editingShortcutId = item?.id ?? null; form.reset(); clearFormErrors(form)
+  ;(form.elements.namedItem('name') as HTMLInputElement).value = item?.name ?? ''
+  ;(form.elements.namedItem('url') as HTMLInputElement).value = item?.url ?? ''
+  const mode = document.querySelector('#shortcut-mode'); const title = document.querySelector('#shortcut-title')
+  if (mode) mode.textContent = item ? 'EDIT SHORTCUT' : 'NEW SHORTCUT'
+  if (title) title.textContent = item ? 'Edit shortcut' : 'Add shortcut'
+  dialog.showModal(); requestAnimationFrame(() => (form.elements.namedItem('name') as HTMLInputElement).focus())
 }
 
 function validateShortcutForm(form: HTMLFormElement) {
@@ -372,7 +400,7 @@ function setFieldError(input: HTMLInputElement, message: string) {
 
 function bindDynamicAssets() {
   document.querySelectorAll<HTMLImageElement>('.site-icon, .link-item img').forEach(image => image.addEventListener('error', () => image.remove()))
-  document.querySelector('#add-shortcut')?.addEventListener('click', () => (document.querySelector('#shortcut-dialog') as HTMLDialogElement).showModal())
+  document.querySelector('#add-shortcut')?.addEventListener('click', () => openShortcutDialog())
 }
 
 function openCommand() {
