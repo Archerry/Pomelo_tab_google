@@ -1,5 +1,6 @@
 import './style.css'
 import { defaultState, loadState, saveState, type AppState } from './storage'
+import { loadPrivacyConsent, savePrivacyConsent } from './privacy-consent'
 
 let state: AppState = structuredClone(defaultState)
 type OpenTab = { id: number; windowId: number; title: string; url: string; favicon: string; domain: string }
@@ -14,6 +15,9 @@ let activeView: ViewName = 'tabs'
 let librarySearch = ''
 let usagePeriod: '7' | '30' | 'all' = '7'
 let editingShortcutId: string | null = null
+let privacyConsentGranted = false
+let clockTimer = 0
+let tabListenersBound = false
 const usageKey = 'pomelo-site-usage-v1'
 const shortcutLimit = 8
 const shortcutNameLimit = 12
@@ -43,7 +47,7 @@ function icon(name: 'search' | 'plus' | 'check' | 'trash' | 'settings' | 'sun' |
 
 function pomeloMark() {
   return `<svg viewBox="0 0 128 128" aria-hidden="true">
-    <rect x="14" y="14" width="100" height="100" rx="31" fill="#684386"/>
+    <rect x="14" y="14" width="100" height="100" rx="31" fill="#684386" stroke="none"/>
     <path d="M64 64V28A36 36 0 0 0 32.8 82Z" fill="#b48bc5" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
     <path d="M64 64 32.8 82A36 36 0 0 0 64 100Z" fill="#d8a4c4" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
     <path d="M64 64V28A36 36 0 0 1 95.2 46Z" fill="#f29a61" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
@@ -266,7 +270,7 @@ function render() {
     </main>
 
     <dialog id="shortcut-dialog"><form id="shortcut-form" novalidate><div class="dialog-head"><div><span class="eyebrow" id="shortcut-mode">NEW SHORTCUT</span><h2 id="shortcut-title">Add shortcut</h2></div><button type="button" data-close-dialog="shortcut-dialog" class="close" aria-label="Close">×</button></div><label><span class="field-label-row"><span>Name</span><small class="field-count" id="shortcut-name-count" aria-live="polite">0 / ${shortcutNameLimit}</small></span><input name="name" maxlength="${shortcutNameLimit}" required placeholder="e.g. GitHub"/><small class="field-error" aria-live="polite"></small></label><label>URL<input name="url" inputmode="url" required placeholder="https://example.com"/><small class="field-error" aria-live="polite"></small></label><div class="dialog-actions"><button type="button" data-close-dialog="shortcut-dialog" class="secondary">Cancel</button><button type="submit" id="save-shortcut">Save</button></div></form></dialog>
-    <dialog id="settings-dialog"><form id="settings-form"><div class="dialog-head"><div><span class="eyebrow">PREFERENCES</span><h2>Settings</h2></div><button type="button" data-close-dialog="settings-dialog" class="close" aria-label="Close">×</button></div><label>Your name<input name="name" maxlength="20" value="${escapeHtml(state.name)}" placeholder="Used in the greeting"/></label><section class="danger-zone"><div><strong>Browsing usage</strong><small>Delete all locally stored site usage statistics.</small></div><button type="button" id="clear-usage">Clear data</button></section><div class="dialog-actions"><button type="button" data-close-dialog="settings-dialog" class="secondary">Cancel</button><button type="submit" id="save-settings">Save</button></div></form></dialog>
+    <dialog id="settings-dialog"><form id="settings-form"><div class="dialog-head"><div><span class="eyebrow">PREFERENCES</span><h2>Settings</h2></div><button type="button" data-close-dialog="settings-dialog" class="close" aria-label="Close">×</button></div><label>Your name<input name="name" maxlength="20" value="${escapeHtml(state.name)}" placeholder="Used in the greeting"/></label><section class="privacy-control"><div><strong>Browser data access</strong><small>Pause access and delete locally stored usage insights.</small></div><button type="button" id="pause-browser-access">Pause access</button></section><section class="danger-zone"><div><strong>Browsing usage</strong><small>Delete all locally stored site usage statistics.</small></div><button type="button" id="clear-usage">Clear data</button></section><div class="dialog-actions"><button type="button" data-close-dialog="settings-dialog" class="secondary">Cancel</button><button type="submit" id="save-settings">Save</button></div></form></dialog>
     <dialog id="command-dialog" class="command-dialog"><div class="command-box"><div class="command-input">${icon('search')}<input id="command-input" autocomplete="off" placeholder="Search tabs, bookmarks, history and shortcuts"/><kbd>ESC</kbd></div><div class="command-results" id="command-results">${commandMarkup()}</div><footer><span>↑↓ Navigate</span><span>↵ Open</span><span>ESC Close</span></footer></div></dialog>
   `
   bindEvents()
@@ -326,6 +330,14 @@ function bindEvents() {
     siteUsage = {}
     if (typeof chrome !== 'undefined' && chrome.storage?.local) await chrome.storage.local.set({ [usageKey]: {} })
     ;(document.querySelector('#settings-dialog') as HTMLDialogElement)?.close(); render()
+  })
+  document.querySelector('#pause-browser-access')?.addEventListener('click', async () => {
+    if (!window.confirm('Pause browser data access and delete local usage insights?')) return
+    privacyConsentGranted = false
+    siteUsage = {}
+    await savePrivacyConsent(false)
+    if (typeof chrome !== 'undefined' && chrome.storage?.local) await chrome.storage.local.set({ [usageKey]: {} })
+    renderPrivacyGate(true)
   })
   document.querySelector('#search-form')?.addEventListener('submit', (event) => {
     event.preventDefault()
@@ -518,17 +530,70 @@ function updateClock() {
   if (greetingEl) greetingEl.textContent = greeting
 }
 
-Promise.all([loadState(), loadOpenTabs(), loadLibraryData(), loadUsage()]).then(([value]) => {
-  state = value; render(); setInterval(updateClock, 1000)
-  if (typeof chrome !== 'undefined') {
-    chrome.tabs?.onCreated?.addListener(refreshTabs)
-    chrome.tabs?.onRemoved?.addListener(refreshTabs)
-    chrome.tabs?.onUpdated?.addListener(refreshTabs)
-  }
+function renderPrivacyGate(paused = false) {
+  document.documentElement.dataset.theme = state.theme
+  app.innerHTML = `<main class="consent-shell">
+    <header class="topbar consent-topbar">
+      <a class="brand" href="#" aria-label="Pomelo Tab"><span class="brand-mark">${pomeloMark()}</span><span>pomelo<span class="brand-dot">.</span></span></a>
+      <a class="consent-policy-link" href="./privacy.html" target="_blank" rel="noreferrer">Privacy policy ${icon('arrow')}</a>
+    </header>
+    <section class="privacy-gate ${paused ? 'is-paused' : ''}">
+      <div class="privacy-mark-stage" aria-hidden="true"><span>${pomeloMark()}</span><i></i><i></i><i></i></div>
+      <div class="privacy-gate-copy">
+        <span class="eyebrow">${paused ? 'POMELO IS PAUSED' : 'PRIVATE BY DEFAULT'}</span>
+        <h1>${paused ? 'Your browser data remains untouched.' : 'Your browser data stays on this device.'}</h1>
+        <p>${paused ? 'Pomelo Tab is waiting for your permission. Enable it whenever you want the complete new-tab workspace.' : 'Pomelo Tab uses your open tabs, bookmarks, recent history, and active website domain to organize your workspace and calculate local usage insights.'}</p>
+        <div class="privacy-promise"><span>${icon('check')}Stored only in Chrome on this device</span><span>${icon('check')}Never transmitted or sold</span><span>${icon('check')}Never used for advertising</span></div>
+        <div class="consent-actions">
+          ${paused ? '<button class="consent-primary" id="review-consent">Review and enable</button>' : '<button class="consent-primary" id="enable-consent">Enable Pomelo Tab</button><button class="consent-secondary" id="decline-consent">Not now</button>'}
+        </div>
+        <small class="consent-note">You can pause access and clear local usage insights at any time in Settings.</small>
+      </div>
+    </section>
+  </main>`
+  bindPrivacyGateEvents()
+}
+
+function bindPrivacyGateEvents() {
+  document.querySelector('#enable-consent')?.addEventListener('click', async () => {
+    await savePrivacyConsent(true)
+    privacyConsentGranted = true
+    await initializeWorkspace()
+  })
+  document.querySelector('#decline-consent')?.addEventListener('click', async () => {
+    await savePrivacyConsent(false)
+    privacyConsentGranted = false
+    renderPrivacyGate(true)
+  })
+  document.querySelector('#review-consent')?.addEventListener('click', () => renderPrivacyGate())
+}
+
+function bindChromeTabListeners() {
+  if (tabListenersBound || typeof chrome === 'undefined') return
+  chrome.tabs?.onCreated?.addListener(refreshTabs)
+  chrome.tabs?.onRemoved?.addListener(refreshTabs)
+  chrome.tabs?.onUpdated?.addListener(refreshTabs)
+  tabListenersBound = true
+}
+
+async function initializeWorkspace() {
+  await loadOpenTabs()
+  await Promise.all([loadLibraryData(), loadUsage()])
+  render()
+  bindChromeTabListeners()
+}
+
+Promise.all([loadState(), loadPrivacyConsent()]).then(async ([value, consent]) => {
+  state = value
+  privacyConsentGranted = consent
+  if (!clockTimer) clockTimer = window.setInterval(updateClock, 1000)
+  if (!privacyConsentGranted) { renderPrivacyGate(); return }
+  await initializeWorkspace()
 })
 
 let refreshTimer = 0
 function refreshTabs() {
+  if (!privacyConsentGranted) return
   clearTimeout(refreshTimer)
   refreshTimer = window.setTimeout(async () => { await loadOpenTabs(); render() }, 120)
 }

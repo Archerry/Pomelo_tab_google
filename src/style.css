@@ -139,3 +139,36 @@ html,body,#app{height:100%;overflow:hidden}
   .insights-summary>div:not(.period-switch){min-height:76px;padding:12px 15px}
   .usage-row{min-height:56px}
 }
+
+/* First-run privacy consent */
+.consent-shell{width:calc(100% - 28px);height:100vh;margin:auto;display:grid;grid-template-rows:92px minmax(0,1fr)}
+.consent-topbar{display:flex;align-items:center;justify-content:space-between}
+.consent-policy-link{height:38px;padding:0 13px;display:flex;align-items:center;gap:7px;border:1px solid rgba(109,74,145,.12);border-radius:11px;color:#594662;background:rgba(255,255,255,.46);font-size:10px;font-weight:650;text-decoration:none}
+.consent-policy-link svg{width:14px}
+.consent-policy-link:hover{color:#684782;background:#faf6fb;border-color:rgba(109,74,145,.2)}
+.privacy-gate{min-height:0;padding:clamp(36px,6vh,84px) clamp(20px,5vw,100px);display:grid;grid-template-columns:minmax(340px,.86fr) minmax(520px,1.14fr);align-items:center;gap:clamp(48px,8vw,140px);overflow:hidden}
+.privacy-mark-stage{height:min(58vh,590px);min-height:370px;position:relative;display:grid;place-items:center;border-radius:44px;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.8),transparent 28%),linear-gradient(145deg,rgba(109,74,145,.13),rgba(226,122,69,.13));box-shadow:inset 0 0 0 1px rgba(109,74,145,.08)}
+.privacy-mark-stage>span{width:min(52%,310px);position:relative;z-index:2;filter:drop-shadow(0 28px 46px rgba(79,53,98,.19))}
+.privacy-mark-stage>span svg{display:block;width:100%;height:auto}
+.privacy-mark-stage>i{position:absolute;border:1px solid rgba(109,74,145,.12);border-radius:50%}
+.privacy-mark-stage>i:nth-of-type(1){width:68%;aspect-ratio:1}
+.privacy-mark-stage>i:nth-of-type(2){width:84%;aspect-ratio:1;border-style:dashed}
+.privacy-mark-stage>i:nth-of-type(3){width:12px;height:12px;right:18%;top:22%;border:0;background:#e9894f;box-shadow:0 0 0 9px rgba(233,137,79,.1)}
+.privacy-gate-copy{max-width:740px}
+.privacy-gate-copy>.eyebrow{color:#d66e3d;font-size:11px}
+.privacy-gate-copy h1{max-width:720px;margin:16px 0 20px;color:#2a2030;font-size:clamp(44px,5.2vw,78px);font-weight:730;line-height:.98;letter-spacing:-.058em}
+.privacy-gate-copy>p{max-width:670px;margin:0;color:#6f6473;font-size:clamp(15px,1.35vw,20px);line-height:1.65}
+.privacy-promise{margin-top:30px;display:grid;gap:12px}
+.privacy-promise span{display:flex;align-items:center;gap:10px;color:#4f4255;font-size:13px;font-weight:620}
+.privacy-promise svg{width:18px;color:#765094}
+.consent-actions{margin-top:34px;display:flex;align-items:center;gap:11px}
+.consent-actions button{height:48px;padding:0 20px;border-radius:13px;font-size:12px;font-weight:720;cursor:pointer}
+.consent-primary{border:0;color:#fff;background:linear-gradient(115deg,#765094,#a85f87 52%,#e27a45);box-shadow:0 12px 28px rgba(103,65,124,.2)}
+.consent-primary:hover{box-shadow:0 15px 34px rgba(103,65,124,.26)}
+.consent-secondary{border:1px solid rgba(109,74,145,.14);color:#594662;background:rgba(255,255,255,.55)}
+.consent-note{display:block;margin-top:16px;color:#8b808f;font-size:10px}
+.privacy-control{margin-top:16px;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid rgba(109,74,145,.13);border-radius:13px;background:rgba(109,74,145,.045)}
+.privacy-control>div{display:grid;gap:4px}.privacy-control strong{font-size:11px}.privacy-control small{color:var(--muted);font-size:9px}.privacy-control button{padding:8px 11px;border:1px solid rgba(109,74,145,.2);border-radius:9px;color:#684782;background:transparent;font-size:9px;cursor:pointer}.privacy-control button:hover{color:#fff;background:#684782}
+:root[data-theme=dark] .privacy-gate-copy h1{color:#f7f1f4}:root[data-theme=dark] .privacy-gate-copy>p{color:#b9abbc}:root[data-theme=dark] .privacy-promise span{color:#dfd4e2}:root[data-theme=dark] .privacy-mark-stage{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.07),transparent 28%),linear-gradient(145deg,rgba(167,116,197,.13),rgba(226,122,69,.1))}:root[data-theme=dark] .consent-policy-link,:root[data-theme=dark] .consent-secondary{color:#ded2e1;background:rgba(255,255,255,.045);border-color:rgba(255,255,255,.1)}
+@media(max-width:900px){.privacy-gate{grid-template-columns:1fr;padding:28px 8vw;overflow:auto}.privacy-mark-stage{min-height:250px;height:34vh}.privacy-mark-stage>span{width:180px}.privacy-gate-copy h1{font-size:44px}}
+@media(max-height:760px) and (min-width:901px){.privacy-gate{padding-top:22px;padding-bottom:22px}.privacy-mark-stage{height:calc(100vh - 140px);min-height:0}.privacy-gate-copy h1{font-size:clamp(38px,4.5vw,62px);margin:11px 0 14px}.privacy-gate-copy>p{font-size:14px}.privacy-promise{margin-top:20px;gap:8px}.consent-actions{margin-top:24px}}
