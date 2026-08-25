@@ -16,10 +16,11 @@ let usagePeriod: '7' | '30' | 'all' = '7'
 let editingShortcutId: string | null = null
 const usageKey = 'pomelo-site-usage-v1'
 const shortcutLimit = 8
+const shortcutNameLimit = 12
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
-function icon(name: 'search' | 'plus' | 'check' | 'trash' | 'settings' | 'sun' | 'moon' | 'tabs' | 'arrow' | 'spark' | 'bookmark' | 'history' | 'grid' | 'close') {
+function icon(name: 'search' | 'plus' | 'check' | 'trash' | 'settings' | 'sun' | 'moon' | 'tabs' | 'arrow' | 'spark' | 'bookmark' | 'history' | 'grid' | 'close' | 'more') {
   const paths = {
     search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -35,8 +36,21 @@ function icon(name: 'search' | 'plus' | 'check' | 'trash' | 'settings' | 'sun' |
     history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8m0-5v5h5"/><path d="M12 7v5l3 2"/>',
     grid: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>',
     close: '<path d="m7 7 10 10M17 7 7 17"/>',
+    more: '<circle cx="5" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1" fill="currentColor" stroke="none"/>',
   }
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`
+}
+
+function pomeloMark() {
+  return `<svg viewBox="0 0 128 128" aria-hidden="true">
+    <rect x="14" y="14" width="100" height="100" rx="31" fill="#684386"/>
+    <path d="M64 64V28A36 36 0 0 0 32.8 82Z" fill="#b48bc5" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
+    <path d="M64 64 32.8 82A36 36 0 0 0 64 100Z" fill="#d8a4c4" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
+    <path d="M64 64V28A36 36 0 0 1 95.2 46Z" fill="#f29a61" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
+    <path d="M64 64 95.2 46A36 36 0 0 1 95.2 82Z" fill="#eb8b4f" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
+    <path d="M64 64 95.2 82A36 36 0 0 1 64 100Z" fill="#f2bda7" stroke="#fffdfa" stroke-width="5.5" stroke-linejoin="round"/>
+    <circle cx="64" cy="64" r="36" fill="none" stroke="#fffdfa" stroke-width="6.5"/>
+  </svg>`
 }
 
 function escapeHtml(value: string) {
@@ -210,7 +224,7 @@ function render() {
   app.innerHTML = `
     <main class="shell">
       <header class="topbar">
-        <a class="brand" href="#" aria-label="Pomelo 首页"><span class="brand-mark">P</span><span>pomelo<span class="brand-dot">.</span></span></a>
+        <a class="brand" href="#" aria-label="Pomelo 首页"><span class="brand-mark">${pomeloMark()}</span><span>pomelo<span class="brand-dot">.</span></span></a>
         <nav class="view-nav" aria-label="Library views">
           <button data-view="tabs" class="${activeView === 'tabs' ? 'active' : ''}">${icon('tabs')}<span>Open tabs</span></button>
           <button data-view="bookmarks" class="${activeView === 'bookmarks' ? 'active' : ''}">${icon('bookmark')}<span>Bookmarks</span></button>
@@ -234,9 +248,9 @@ function render() {
           <span class="search-spark">${icon('spark')}</span><kbd>↵</kbd>
         </form>
         <section class="quick-access">
-          <div class="quick-access-head"><span>Quick access</span><small>${state.shortcuts.length} / ${shortcutLimit}</small></div>
+          <div class="quick-access-head"><span>Quick access</span></div>
           <div class="quick-grid">
-            ${state.shortcuts.map(item => `<div class="quick-item"><a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 48))}" alt=""/></span><span class="quick-copy"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(domainOf(item.url))}</small></span></a><span class="quick-actions"><button data-edit-shortcut="${item.id}" title="Edit ${escapeHtml(item.name)}">${icon('settings')}</button><button data-delete-shortcut="${item.id}" title="Delete ${escapeHtml(item.name)}">${icon('trash')}</button></span></div>`).join('')}
+            ${state.shortcuts.map(item => `<div class="quick-item"><a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 48))}" alt=""/></span><strong>${escapeHtml(item.name)}</strong></a><button class="quick-more" data-shortcut-more aria-expanded="false" aria-label="Manage ${escapeHtml(item.name)}">${icon('more')}</button><div class="shortcut-menu" data-shortcut-menu hidden><button data-edit-shortcut="${item.id}">${icon('settings')}<span>Edit</span></button><button data-delete-shortcut="${item.id}">${icon('trash')}<span>Delete</span></button></div></div>`).join('')}
             ${state.shortcuts.length < shortcutLimit ? `<button id="add-shortcut" class="quick-add" title="Add shortcut">${icon('plus')}<span>Add shortcut</span></button>` : ''}
           </div>
         </section>
@@ -244,14 +258,14 @@ function render() {
 
       <section class="workspace single-workspace">
         <article class="panel library-panel reveal" style="--delay:0ms">
-          <div class="panel-heading tabs-heading"><div><span class="eyebrow">${activeView === 'tabs' ? 'LIVE BROWSER' : activeView === 'insights' ? 'LOCAL ANALYTICS' : 'LOCAL LIBRARY'}</span><h2>${activeView === 'tabs' ? 'Open tabs' : activeView === 'bookmarks' ? 'Bookmarks' : activeView === 'history' ? 'Recent history' : 'Usage insights'}</h2></div><span class="tab-total">${activeView === 'tabs' ? `${openTabs.length} tabs` : activeView === 'bookmarks' ? `${bookmarks.length} saved` : activeView === 'history' ? `${historyItems.length} visits` : 'Private & local'}</span></div>
+          <div class="panel-heading tabs-heading"><h2>${activeView === 'tabs' ? 'Open tabs' : activeView === 'bookmarks' ? 'Bookmarks' : activeView === 'history' ? 'Recent history' : 'Usage insights'}</h2></div>
           ${activeView === 'insights' ? '' : `<label class="tab-search">${icon('search')}<input id="tab-search" value="${escapeHtml(librarySearch)}" placeholder="Search this view"/><kbd>/</kbd></label>`}
-          <div class="tab-groups view-content" id="tab-groups">${currentContent()}</div>
+          <div class="tab-groups view-content${activeView === 'insights' ? ' insights-content' : ''}" id="tab-groups">${currentContent()}</div>
         </article>
       </section>
     </main>
 
-    <dialog id="shortcut-dialog"><form id="shortcut-form" novalidate><div class="dialog-head"><div><span class="eyebrow" id="shortcut-mode">NEW SHORTCUT</span><h2 id="shortcut-title">Add shortcut</h2></div><button type="button" data-close-dialog="shortcut-dialog" class="close" aria-label="Close">×</button></div><label>Name<input name="name" maxlength="20" required placeholder="e.g. GitHub"/><small class="field-error" aria-live="polite"></small></label><label>URL<input name="url" inputmode="url" required placeholder="https://example.com"/><small class="field-error" aria-live="polite"></small></label><div class="dialog-actions"><button type="button" data-close-dialog="shortcut-dialog" class="secondary">Cancel</button><button type="submit" id="save-shortcut">Save</button></div></form></dialog>
+    <dialog id="shortcut-dialog"><form id="shortcut-form" novalidate><div class="dialog-head"><div><span class="eyebrow" id="shortcut-mode">NEW SHORTCUT</span><h2 id="shortcut-title">Add shortcut</h2></div><button type="button" data-close-dialog="shortcut-dialog" class="close" aria-label="Close">×</button></div><label><span class="field-label-row"><span>Name</span><small class="field-count" id="shortcut-name-count" aria-live="polite">0 / ${shortcutNameLimit}</small></span><input name="name" maxlength="${shortcutNameLimit}" required placeholder="e.g. GitHub"/><small class="field-error" aria-live="polite"></small></label><label>URL<input name="url" inputmode="url" required placeholder="https://example.com"/><small class="field-error" aria-live="polite"></small></label><div class="dialog-actions"><button type="button" data-close-dialog="shortcut-dialog" class="secondary">Cancel</button><button type="submit" id="save-shortcut">Save</button></div></form></dialog>
     <dialog id="settings-dialog"><form id="settings-form"><div class="dialog-head"><div><span class="eyebrow">PREFERENCES</span><h2>Settings</h2></div><button type="button" data-close-dialog="settings-dialog" class="close" aria-label="Close">×</button></div><label>Your name<input name="name" maxlength="20" value="${escapeHtml(state.name)}" placeholder="Used in the greeting"/></label><section class="danger-zone"><div><strong>Browsing usage</strong><small>Delete all locally stored site usage statistics.</small></div><button type="button" id="clear-usage">Clear data</button></section><div class="dialog-actions"><button type="button" data-close-dialog="settings-dialog" class="secondary">Cancel</button><button type="submit" id="save-settings">Save</button></div></form></dialog>
     <dialog id="command-dialog" class="command-dialog"><div class="command-box"><div class="command-input">${icon('search')}<input id="command-input" autocomplete="off" placeholder="Search tabs, bookmarks, history and shortcuts"/><kbd>ESC</kbd></div><div class="command-results" id="command-results">${commandMarkup()}</div><footer><span>↑↓ Navigate</span><span>↵ Open</span><span>ESC Close</span></footer></div></dialog>
   `
@@ -261,6 +275,21 @@ function render() {
 
 function bindEvents() {
   bindDynamicAssets()
+  const closeShortcutMenus = () => {
+    document.querySelectorAll<HTMLElement>('[data-shortcut-menu]').forEach(menu => { menu.hidden = true })
+    document.querySelectorAll<HTMLButtonElement>('[data-shortcut-more]').forEach(button => { button.ariaExpanded = 'false' })
+  }
+  document.querySelectorAll<HTMLButtonElement>('[data-shortcut-more]').forEach(button => button.addEventListener('click', event => {
+    event.stopPropagation()
+    const menu = button.parentElement?.querySelector<HTMLElement>('[data-shortcut-menu]')
+    const willOpen = Boolean(menu?.hidden)
+    closeShortcutMenus()
+    if (menu && willOpen) { menu.hidden = false; button.ariaExpanded = 'true' }
+  }))
+  document.onclick = event => {
+    const target = event.target as HTMLElement
+    if (!target.closest('[data-shortcut-menu]') && !target.closest('[data-shortcut-more]')) closeShortcutMenus()
+  }
   document.querySelector('#theme')?.addEventListener('click', async () => {
     document.documentElement.classList.add('theme-changing')
     state.theme = state.theme === 'light' ? 'dark' : 'light'
@@ -271,10 +300,12 @@ function bindEvents() {
   document.querySelector('#add-shortcut')?.addEventListener('click', () => openShortcutDialog())
   document.querySelectorAll<HTMLElement>('[data-edit-shortcut]').forEach(button => button.addEventListener('click', () => {
     const item = state.shortcuts.find(shortcut => shortcut.id === button.dataset.editShortcut)
+    closeShortcutMenus()
     if (item) openShortcutDialog(item)
   }))
   document.querySelectorAll<HTMLElement>('[data-delete-shortcut]').forEach(button => button.addEventListener('click', async () => {
     const item = state.shortcuts.find(shortcut => shortcut.id === button.dataset.deleteShortcut)
+    closeShortcutMenus()
     if (!item || !window.confirm(`Delete “${item.name}” from Quick Access?`)) return
     state.shortcuts = state.shortcuts.filter(shortcut => shortcut.id !== item.id)
     await saveState(state); render()
@@ -323,7 +354,10 @@ function bindEvents() {
       tabInput.blur(); items.forEach(item => item.classList.remove('keyboard-active'))
     }
   })
+  const shortcutNameInput = document.querySelector<HTMLInputElement>('#shortcut-form input[name="name"]')
+  shortcutNameInput?.addEventListener('input', () => updateShortcutNameCount(shortcutNameInput))
   document.onkeydown = event => {
+    if (event.key === 'Escape' && document.querySelector('[data-shortcut-menu]:not([hidden])')) { event.preventDefault(); closeShortcutMenus(); return }
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); openCommand() }
     if ((event.metaKey || event.ctrlKey) && event.shiftKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault()
@@ -372,6 +406,7 @@ function openShortcutDialog(item?: AppState['shortcuts'][number]) {
   editingShortcutId = item?.id ?? null; form.reset(); clearFormErrors(form)
   ;(form.elements.namedItem('name') as HTMLInputElement).value = item?.name ?? ''
   ;(form.elements.namedItem('url') as HTMLInputElement).value = item?.url ?? ''
+  updateShortcutNameCount(form.elements.namedItem('name') as HTMLInputElement)
   const mode = document.querySelector('#shortcut-mode'); const title = document.querySelector('#shortcut-title')
   if (mode) mode.textContent = item ? 'EDIT SHORTCUT' : 'NEW SHORTCUT'
   if (title) title.textContent = item ? 'Edit shortcut' : 'Add shortcut'
@@ -383,6 +418,7 @@ function validateShortcutForm(form: HTMLFormElement) {
   const name = form.elements.namedItem('name') as HTMLInputElement
   const urlInput = form.elements.namedItem('url') as HTMLInputElement
   if (!name.value.trim()) setFieldError(name, 'Enter a name.')
+  else if (name.value.trim().length > shortcutNameLimit) setFieldError(name, `Use ${shortcutNameLimit} characters or fewer.`)
   if (!urlInput.value.trim()) setFieldError(urlInput, 'Enter a URL.')
   if (urlInput.value.trim()) {
     try {
@@ -394,6 +430,13 @@ function validateShortcutForm(form: HTMLFormElement) {
   const firstInvalid = form.querySelector<HTMLInputElement>('[aria-invalid="true"]')
   firstInvalid?.focus()
   return !firstInvalid
+}
+
+function updateShortcutNameCount(input: HTMLInputElement) {
+  const counter = document.querySelector<HTMLElement>('#shortcut-name-count')
+  if (!counter) return
+  counter.textContent = `${input.value.length} / ${shortcutNameLimit}`
+  counter.classList.toggle('over-limit', input.value.trim().length > shortcutNameLimit)
 }
 
 function setFieldError(input: HTMLInputElement, message: string) {

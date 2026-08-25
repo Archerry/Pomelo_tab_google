@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Pomelo New Tab",
+  "name": "Pomelo Tab",
   "version": "1.0.0",
   "description": "一个安静、快速、可自定义的新标签页。",
   "chrome_url_overrides": {
