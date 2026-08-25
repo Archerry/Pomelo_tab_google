@@ -15,6 +15,7 @@ let librarySearch = ''
 let usagePeriod: '7' | '30' | 'all' = '7'
 let editingShortcutId: string | null = null
 const usageKey = 'pomelo-site-usage-v1'
+const shortcutLimit = 8
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
@@ -115,7 +116,7 @@ function tabsMarkup() {
   if (!filtered.length) return '<div class="tabs-empty"><span>⌕</span><p>No matching tabs</p></div>'
   return [...groups].map(([domain, tabs]) => `
     <section class="domain-collection">
-      <div class="collection-head"><span class="domain-icon">${escapeHtml(domain.charAt(0).toUpperCase())}</span><div><strong>${escapeHtml(domain)}</strong><small>${tabs.length} ${tabs.length === 1 ? 'tab' : 'tabs'}</small></div></div>
+      <div class="collection-head"><span class="domain-icon"><span>${escapeHtml(domain.charAt(0).toUpperCase())}</span><img class="domain-favicon" src="${escapeHtml(siteFavicon(`https://${domain}`, 32))}" alt=""/></span><div><strong>${escapeHtml(domain)}</strong><small>${tabs.length} ${tabs.length === 1 ? 'tab' : 'tabs'}</small></div></div>
       <div class="collection-tabs">${tabs.map(tab => `<button class="tab-item" data-tab-id="${tab.id}" data-window-id="${tab.windowId}" data-url="${escapeHtml(tab.url)}" title="${escapeHtml(tab.url)}">
         <span class="favicon">${tab.favicon ? `<img src="${escapeHtml(tab.favicon)}" alt=""/>` : escapeHtml(tab.domain.charAt(0).toUpperCase())}</span>
         <span class="tab-copy"><strong>${escapeHtml(tab.title)}</strong><small>Window ${tab.windowId} · ${escapeHtml(tab.url.replace(/^https?:\/\//, '').split('/')[0])}</small></span>
@@ -131,7 +132,7 @@ function linksMarkup(items: LinkItem[]) {
   filtered.forEach(item => groups.set(item.domain, [...(groups.get(item.domain) ?? []), item]))
   if (!filtered.length) return '<div class="tabs-empty"><span>⌕</span><p>No matching items</p></div>'
   return [...groups].map(([domain, links]) => `<section class="domain-collection">
-    <div class="collection-head"><span class="domain-icon">${escapeHtml(domain.charAt(0).toUpperCase())}</span><div><strong>${escapeHtml(domain)}</strong><small>${links.length} ${links.length === 1 ? 'item' : 'items'}</small></div></div>
+    <div class="collection-head"><span class="domain-icon"><span>${escapeHtml(domain.charAt(0).toUpperCase())}</span><img class="domain-favicon" src="${escapeHtml(siteFavicon(`https://${domain}`, 32))}" alt=""/></span><div><strong>${escapeHtml(domain)}</strong><small>${links.length} ${links.length === 1 ? 'item' : 'items'}</small></div></div>
     <div class="collection-tabs">${links.map(link => `<a class="tab-item link-item" href="${escapeHtml(link.url)}"><span class="favicon"><img src="${escapeHtml(siteFavicon(link.url))}" alt=""/></span><span class="tab-copy"><strong>${escapeHtml(link.title)}</strong><small>${escapeHtml(link.meta || domain)}</small></span><span class="tab-arrow">${icon('arrow')}</span></a>`).join('')}</div>
   </section>`).join('')
 }
@@ -229,14 +230,16 @@ function render() {
         <div class="hero-title"><h1><span id="greeting"></span>${state.name ? `, ${escapeHtml(state.name)}` : ''}</h1><p class="time" id="time"></p></div>
         <form class="search" id="search-form">
           ${icon('search')}
-          <input id="search-input" autocomplete="off" autofocus placeholder="Search Google or enter a URL" aria-label="Search Google or enter a URL" />
+          <input id="search-input" autocomplete="off" placeholder="Search Google or enter a URL" aria-label="Search Google or enter a URL" />
           <span class="search-spark">${icon('spark')}</span><kbd>↵</kbd>
         </form>
-        <div class="quick-bar">
-          <span class="quick-label">Quick access</span>
-          ${state.shortcuts.map(item => `<div class="quick-item"><a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 32))}" alt=""/></span><strong>${escapeHtml(item.name)}</strong></a><span class="quick-actions"><button data-edit-shortcut="${item.id}" title="Edit ${escapeHtml(item.name)}">${icon('settings')}</button><button data-delete-shortcut="${item.id}" title="Delete ${escapeHtml(item.name)}">${icon('trash')}</button></span></div>`).join('')}
-          <button id="add-shortcut" class="quick-add" title="Add shortcut">${icon('plus')}</button>
-        </div>
+        <section class="quick-access">
+          <div class="quick-access-head"><span>Quick access</span><small>${state.shortcuts.length} / ${shortcutLimit}</small></div>
+          <div class="quick-grid">
+            ${state.shortcuts.map(item => `<div class="quick-item"><a href="${escapeHtml(item.url)}" title="${escapeHtml(item.name)}"><span class="mini-favicon"><span>${escapeHtml(item.name.charAt(0).toUpperCase())}</span><img class="site-icon" src="${escapeHtml(siteFavicon(item.url, 48))}" alt=""/></span><span class="quick-copy"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(domainOf(item.url))}</small></span></a><span class="quick-actions"><button data-edit-shortcut="${item.id}" title="Edit ${escapeHtml(item.name)}">${icon('settings')}</button><button data-delete-shortcut="${item.id}" title="Delete ${escapeHtml(item.name)}">${icon('trash')}</button></span></div>`).join('')}
+            ${state.shortcuts.length < shortcutLimit ? `<button id="add-shortcut" class="quick-add" title="Add shortcut">${icon('plus')}<span>Add shortcut</span></button>` : ''}
+          </div>
+        </section>
       </section>
 
       <section class="workspace single-workspace">
@@ -257,7 +260,7 @@ function render() {
 }
 
 function bindEvents() {
-  document.querySelectorAll<HTMLImageElement>('.site-icon').forEach(image => image.addEventListener('error', () => image.remove()))
+  bindDynamicAssets()
   document.querySelector('#theme')?.addEventListener('click', async () => {
     document.documentElement.classList.add('theme-changing')
     state.theme = state.theme === 'light' ? 'dark' : 'light'
@@ -365,6 +368,7 @@ function openShortcutDialog(item?: AppState['shortcuts'][number]) {
   const dialog = document.querySelector<HTMLDialogElement>('#shortcut-dialog')
   const form = document.querySelector<HTMLFormElement>('#shortcut-form')
   if (!dialog || !form) return
+  if (!item && state.shortcuts.length >= shortcutLimit) return
   editingShortcutId = item?.id ?? null; form.reset(); clearFormErrors(form)
   ;(form.elements.namedItem('name') as HTMLInputElement).value = item?.name ?? ''
   ;(form.elements.namedItem('url') as HTMLInputElement).value = item?.url ?? ''
@@ -399,8 +403,7 @@ function setFieldError(input: HTMLInputElement, message: string) {
 }
 
 function bindDynamicAssets() {
-  document.querySelectorAll<HTMLImageElement>('.site-icon, .link-item img').forEach(image => image.addEventListener('error', () => image.remove()))
-  document.querySelector('#add-shortcut')?.addEventListener('click', () => openShortcutDialog())
+  document.querySelectorAll<HTMLImageElement>('.site-icon, .link-item img, .domain-favicon').forEach(image => image.addEventListener('error', () => image.remove()))
 }
 
 function openCommand() {
