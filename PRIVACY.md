@@ -55,4 +55,4 @@ If Pomelo Tab's data practices change, this policy and the in-product disclosure
 
 ## Contact
 
-For privacy or support questions, contact: **[PUBLISHER SUPPORT EMAIL — REPLACE BEFORE PUBLISHING]**
+For privacy or support questions, open an issue at [github.com/Archerry/Pomelo_tab_google/issues](https://github.com/Archerry/Pomelo_tab_google/issues).

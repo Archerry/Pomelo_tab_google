@@ -136,7 +136,7 @@ Copy the final tracked policy content to the ignored release-kit copies and repl
 Run:
 
 ```bash
-rg -n "REPLACE BEFORE PUBLISHING|PUBLISHER SUPPORT EMAIL|PUBLIC HTTPS PRIVACY" PRIVACY.md public/privacy.html docs release/store-listing
+rg -n "REPLACE BEFORE PUBLISHING|PUBLISHER SUPPORT EMAIL|PUBLIC HTTPS PRIVACY" PRIVACY.md public/privacy.html docs/privacy.html docs/index.html docs/chrome-web-store-submission-guide.md release/store-listing
 ```
 
 Expected: no matches.
