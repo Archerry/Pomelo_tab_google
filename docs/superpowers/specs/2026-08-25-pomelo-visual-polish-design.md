@@ -29,6 +29,10 @@ Each shortcut tile displays only:
 
 The domain subtitle and shortcut capacity count are removed.
 
+All shortcut tiles, including the add tile, use the same fixed `156 × 54px` size on standard desktop widths. Tiles flow from left to right at their intrinsic fixed width and do not stretch to fill the row. Responsive rules may reduce the fixed width on narrower screens, but tiles remain equal within a viewport.
+
+Shortcut names are limited to 12 characters when added or edited. The form shows a live `current / 12` counter. Existing stored names longer than 12 characters are preserved until edited and are visually truncated with an ellipsis; saving an edited shortcut requires a compliant name.
+
 Shortcut tiles use the approved interaction language:
 
 - no upward movement;
@@ -60,6 +64,14 @@ Insights keeps its existing structure, data, period filters, and bars. Only typo
 - period controls: 11px.
 
 Rows gain enough height and spacing to support these sizes without crowding. Mobile layouts retain the existing rule that hides the bar track when space is limited.
+
+The Insights view does not inherit the `202px` grid row used by domain collections. It receives a dedicated content class and fills the library panel's remaining height. The usage list scrolls internally only when all rows genuinely cannot fit.
+
+## Single-screen layout
+
+The application shell is fixed to `100vh` and divided into top bar, hero/Quick Access, and a `minmax(0, 1fr)` library area. The document itself does not scroll.
+
+The library panel fills the final grid row with `min-height: 0`. Tabs, bookmarks, history, and Insights may scroll inside their own content area when the dataset exceeds the available space. At common desktop heights, the header, search, Quick Access, library heading, and normal result set remain visible together without document scrolling.
 
 ## Copy reduction
 
