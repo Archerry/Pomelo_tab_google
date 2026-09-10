@@ -1,12 +1,12 @@
 # Pomelo Tab — Chrome Web Store 上架填写指南
 
-更新日期：2026-08-25
+更新日期：2026-09-10
 
-本指南对应 Pomelo Tab `1.0.0`、Manifest V3，以及 Chrome Web Store Developer Dashboard 当前的商品详情、隐私权规范和发布流程。后台中文翻译可能微调；遇到差异时，以括号内英文名称和字段含义为准。
+本指南对应 Pomelo Tab `1.0.1`、Manifest V3，以及 Chrome Web Store Developer Dashboard 当前的商品详情、隐私权规范和发布流程。后台中文翻译可能微调；遇到差异时，以括号内英文名称和字段含义为准。
 
 ## 准备文件
 
-- 扩展 ZIP：`release/pomelo-tab-v1.0.0.zip`
+- 扩展 ZIP：`release/pomelo-tab-v1.0.1.zip`
 - 商店图标：`release/store-listing/assets/icon-128.png`
 - 截图：`release/store-listing/assets/screenshots/01-privacy-onboarding.png` 至 `04-insights.png`
 - 小型宣传图：`release/store-listing/assets/promo/promo-small-440x280.png`
@@ -20,13 +20,13 @@
 你已经有 Pomelo Tab 商品条目，因此进入该条目后打开 **软件包 / Package**，选择上传新软件包或替换软件包，上传：
 
 ```text
-release/pomelo-tab-v1.0.0.zip
+release/pomelo-tab-v1.0.1.zip
 ```
 
 上传后确认：
 
 - Name：`Pomelo Tab`
-- Version：`1.0.0`
+- Version：`1.0.1`
 - Manifest：`V3`
 - 默认语言：English
 - 简体中文本地化存在
@@ -284,7 +284,7 @@ https://github.com/Archerry/Pomelo_tab_google/issues
 2. 在 **Preview / 预览** 中分别检查英文和简体中文商品详情。
 3. 确认所有隐私权和权限字段已保存，没有黄色或红色警告。
 4. 确认支持邮箱已经验证。
-5. 确认上传的软件包是本项目 `release/pomelo-tab-v1.0.0.zip` 的最新版本。
+5. 确认上传的软件包是本项目 `release/pomelo-tab-v1.0.1.zip` 的最新版本。
 6. 点击 **Submit for review / 提交审核**。
 
-提交审核会正式把当前版本发送给 Google。执行最后一步前，建议再次确认页面显示的版本号为 `1.0.0`。
+提交审核会正式把当前版本发送给 Google。执行最后一步前，建议再次确认页面显示的版本号为 `1.0.1`。
