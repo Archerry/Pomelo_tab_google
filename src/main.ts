@@ -19,7 +19,7 @@ let privacyConsentGranted = false
 let clockTimer = 0
 let tabListenersBound = false
 const usageKey = 'pomelo-site-usage-v1'
-const shortcutLimit = 8
+const shortcutLimit = 20
 const shortcutNameLimit = 12
 
 const app = document.querySelector<HTMLDivElement>('#app')!

@@ -90,8 +90,8 @@ html,body,#app{height:100%;overflow:hidden}
 .quick-access{margin-top:9px;padding:8px 11px 10px}
 .quick-access-head{height:18px;align-items:flex-start}
 .quick-access-head span{font-size:9px}
-.quick-grid{display:flex;flex-wrap:nowrap;justify-content:flex-start;gap:8px;overflow:visible}
-.quick-grid .quick-item,.quick-grid .quick-add{width:156px;height:54px;flex:0 0 156px}
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fill,156px);grid-auto-rows:54px;justify-content:start;gap:8px;overflow:visible}
+.quick-grid .quick-item,.quick-grid .quick-add{width:156px;height:54px}
 .quick-grid .quick-item>a{padding:7px 38px 7px 9px;gap:9px}
 .quick-grid .mini-favicon{width:34px;height:34px;border-radius:9px}
 .quick-grid .mini-favicon img{width:21px;height:21px}
@@ -112,16 +112,6 @@ html,body,#app{height:100%;overflow:hidden}
 .field-count{color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums}
 .field-count.over-limit{color:#c84f52;font-weight:700}
 
-@media(max-width:1200px){
-  .quick-grid .quick-item,.quick-grid .quick-add{width:132px;flex-basis:132px}
-}
-@media(max-width:900px){
-  .quick-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:54px}
-  .quick-grid .quick-item,.quick-grid .quick-add{width:100%;height:54px}
-}
-@media(max-width:560px){
-  .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
 @media(max-height:850px){
   .shell{grid-template-rows:76px auto minmax(0,1fr)}
   .topbar{height:64px;margin-top:6px}

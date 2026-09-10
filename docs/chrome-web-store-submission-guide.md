@@ -56,7 +56,7 @@ Keep the things you use every day close at hand:
 
 • See open tabs grouped by website, then open, focus, or close them.
 • Find bookmarks and recent history without leaving the new tab.
-• Create up to eight Quick Access shortcuts with compact site icons.
+• Create up to 20 Quick Access shortcuts with compact site icons.
 • Search Google, enter a URL, or search across tabs, bookmarks, history, and shortcuts.
 • Review locally calculated site-usage insights for 7 days, 30 days, or all time.
 • Choose a light or dark appearance and add an optional greeting name.
@@ -115,7 +115,7 @@ Pomelo Tab 将 Chrome 新标签页变成一个专注、清爽的浏览器工作�
 
 • 按站点整理已打开的标签页，并可打开、切换或关闭标签页；
 • 直接查找书签和近期浏览历史；
-• 添加最多 8 个 Quick Access 快捷入口，并展示简洁的站点图标；
+• 添加最多 20 个 Quick Access 快捷入口，并展示简洁的站点图标；
 • 使用 Google 搜索、直接输入网址，或统一搜索标签页、书签、历史与快捷入口；
 • 查看在本机计算的 7 天、30 天或全部站点使用统计；
 • 切换浅色或深色外观，并可设置问候语中显示的名称。
