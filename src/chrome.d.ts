@@ -25,4 +25,10 @@ declare const chrome: {
   history?: {
     search(query: { text: string; maxResults: number; startTime?: number }): Promise<Array<{ id: string; title?: string; url?: string; lastVisitTime?: number }>>
   }
+  search?: {
+    query(queryInfo: {
+      text: string
+      disposition?: 'CURRENT_TAB' | 'NEW_TAB' | 'NEW_WINDOW'
+    }): Promise<void>
+  }
 }

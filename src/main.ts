@@ -1,6 +1,7 @@
 import './style.css'
 import { defaultState, loadState, saveState, type AppState } from './storage'
 import { loadPrivacyConsent, savePrivacyConsent } from './privacy-consent'
+import { submitNewTabSearch } from './new-tab-search'
 
 let state: AppState = structuredClone(defaultState)
 type OpenTab = { id: number; windowId: number; title: string; url: string; favicon: string; domain: string }
@@ -339,12 +340,24 @@ function bindEvents() {
     if (typeof chrome !== 'undefined' && chrome.storage?.local) await chrome.storage.local.set({ [usageKey]: {} })
     renderPrivacyGate(true)
   })
-  document.querySelector('#search-form')?.addEventListener('submit', (event) => {
+  document.querySelector('#search-form')?.addEventListener('submit', async (event) => {
     event.preventDefault()
-    const query = (document.querySelector('#search-input') as HTMLInputElement).value.trim()
-    if (!query) return
-    const looksLikeUrl = /^(https?:\/\/|localhost|([\w-]+\.)+[a-z]{2,})(\/|$)/i.test(query)
-    location.href = looksLikeUrl ? (/^https?:\/\//i.test(query) ? query : `https://${query}`) : `https://www.google.com/search?q=${encodeURIComponent(query)}`
+    const input = document.querySelector<HTMLInputElement>('#search-input')
+    if (!input) return
+    input.setCustomValidity('')
+    try {
+      await submitNewTabSearch(input.value, {
+        navigate: url => { location.href = url },
+        search: async text => {
+          if (typeof chrome === 'undefined' || !chrome.search?.query) throw new Error('Chrome Search API is unavailable')
+          await chrome.search.query({ text, disposition: 'CURRENT_TAB' })
+        },
+      })
+    } catch (error) {
+      console.error('Unable to search with the default provider', error)
+      input.setCustomValidity('Search is unavailable in this browser.')
+      input.reportValidity()
+    }
   })
   const tabInput = document.querySelector<HTMLInputElement>('#tab-search')
   tabInput?.addEventListener('input', () => {
