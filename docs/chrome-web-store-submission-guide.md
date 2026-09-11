@@ -1,12 +1,12 @@
 # Pomelo Tab — Chrome Web Store 上架填写指南
 
-更新日期：2026-09-10
+更新日期：2026-09-11
 
-本指南对应 Pomelo Tab `1.0.1`、Manifest V3，以及 Chrome Web Store Developer Dashboard 当前的商品详情、隐私权规范和发布流程。后台中文翻译可能微调；遇到差异时，以括号内英文名称和字段含义为准。
+本指南对应 Pomelo Tab `1.0.2`、Manifest V3，以及 Chrome Web Store Developer Dashboard 当前的商品详情、隐私权规范和发布流程。后台中文翻译可能微调；遇到差异时，以括号内英文名称和字段含义为准。
 
 ## 准备文件
 
-- 扩展 ZIP：`release/pomelo-tab-v1.0.1.zip`
+- 扩展 ZIP：`release/pomelo-tab-v1.0.2.zip`
 - 商店图标：`release/store-listing/assets/icon-128.png`
 - 截图：`release/store-listing/assets/screenshots/01-privacy-onboarding.png` 至 `04-insights.png`
 - 小型宣传图：`release/store-listing/assets/promo/promo-small-440x280.png`
@@ -20,13 +20,13 @@
 你已经有 Pomelo Tab 商品条目，因此进入该条目后打开 **软件包 / Package**，选择上传新软件包或替换软件包，上传：
 
 ```text
-release/pomelo-tab-v1.0.1.zip
+release/pomelo-tab-v1.0.2.zip
 ```
 
 上传后确认：
 
 - Name：`Pomelo Tab`
-- Version：`1.0.1`
+- Version：`1.0.2`
 - Manifest：`V3`
 - 默认语言：English
 - 简体中文本地化存在
@@ -57,7 +57,7 @@ Keep the things you use every day close at hand:
 • See open tabs grouped by website, then open, focus, or close them.
 • Find bookmarks and recent history without leaving the new tab.
 • Create up to 20 Quick Access shortcuts with compact site icons.
-• Search Google, enter a URL, or search across tabs, bookmarks, history, and shortcuts.
+• Search the web with your current Chrome default search provider, enter a URL, or search across tabs, bookmarks, history, and shortcuts.
 • Review locally calculated site-usage insights for 7 days, 30 days, or all time.
 • Choose a light or dark appearance and add an optional greeting name.
 
@@ -116,7 +116,7 @@ Pomelo Tab 将 Chrome 新标签页变成一个专注、清爽的浏览器工作�
 • 按站点整理已打开的标签页，并可打开、切换或关闭标签页；
 • 直接查找书签和近期浏览历史；
 • 添加最多 20 个 Quick Access 快捷入口，并展示简洁的站点图标；
-• 使用 Google 搜索、直接输入网址，或统一搜索标签页、书签、历史与快捷入口；
+• 使用 Chrome 当前的默认搜索引擎搜索网页、直接输入网址，或统一搜索标签页、书签、历史与快捷入口；
 • 查看在本机计算的 7 天、30 天或全部站点使用统计；
 • 切换浅色或深色外观，并可设置问候语中显示的名称。
 
@@ -146,7 +146,7 @@ Pomelo Tab 不需要账号，不提供云同步，不包含分析 SDK、广告�
 ### 3.1 单一用途（Single purpose）
 
 ```text
-Pomelo Tab replaces Chrome's new-tab page with a local browser workspace for managing open tabs, bookmarks, recent history, shortcuts, search, and on-device site-usage insights.
+Pomelo Tab's single purpose is to replace Chrome's new-tab page with one local workspace that helps users organize and resume their browsing.
 ```
 
 ### 3.2 权限理由（Permission justifications）
@@ -185,6 +185,12 @@ Reads recent history titles, URLs, and visit dates so the user can search, view,
 
 ```text
 Runs a once-per-minute local task that records the active website domain in on-device usage aggregates. The task exits before reading browser state unless the user has granted consent.
+```
+
+`search`：
+
+```text
+Sends non-URL text entered in the new-tab search field to the Chrome Search API. Chrome uses the user's current default search provider; Pomelo Tab does not select or change that provider.
 ```
 
 ### 3.3 远程代码（Remote code）
@@ -255,10 +261,18 @@ No account or test credentials are required.
 审核步骤：
 
 ```text
-Open a new Chrome tab after installing Pomelo Tab. On first run, review the browser-data disclosure and select "Enable Pomelo Tab". The Open Tabs, Bookmarks, History, and Insights views will then become available. Open Settings to pause browser-data access or clear locally stored usage insights. All browser data is processed locally and is not transmitted.
+Open a new Chrome tab after installing Pomelo Tab. On first run, review the browser-data disclosure and select "Enable Pomelo Tab". Enter non-URL text in the main search field and confirm that Chrome searches with the browser's current default search provider. URL-like input navigates directly. The Open Tabs, Bookmarks, History, and Insights views are also available. Open Settings to pause browser-data access or clear locally stored usage insights. All browser data is processed locally and is not transmitted.
 ```
 
-## 5. 发布者与支持信息
+## 5. Red Argon 复审说明
+
+在复审说明或申诉说明中粘贴：
+
+```text
+Pomelo Tab 1.0.2 removes the hard-coded Google Search URL. All non-URL web searches from the new-tab page now use chrome.search.query with CURRENT_TAB, which respects the user's active Chrome default search provider. The extension does not declare chrome_settings_overrides and does not change the user's default search provider. URL-like input continues to navigate directly.
+```
+
+## 6. 发布者与支持信息
 
 支持邮箱（Support email）必须填写你在 Chrome Web Store 开发者账号中能够收信并完成验证的邮箱。不要把邮箱提交到项目源码；只填写在 Google 后台。
 
@@ -268,7 +282,7 @@ Open a new Chrome tab after installing Pomelo Tab. On first run, review the brow
 https://github.com/Archerry/Pomelo_tab_google/issues
 ```
 
-## 6. 发布范围（Distribution）
+## 7. 发布范围（Distribution）
 
 - 可见性：`Public`
 - 地区：`All regions`
@@ -278,13 +292,13 @@ https://github.com/Archerry/Pomelo_tab_google/issues
 
 如果后台询问交易者身份（Trader status），必须根据你的真实主体情况选择，不能由项目代码代填。
 
-## 7. 提交前检查
+## 8. 提交前检查
 
 1. 在无痕窗口打开隐私政策 URL，确认无需登录。
 2. 在 **Preview / 预览** 中分别检查英文和简体中文商品详情。
 3. 确认所有隐私权和权限字段已保存，没有黄色或红色警告。
 4. 确认支持邮箱已经验证。
-5. 确认上传的软件包是本项目 `release/pomelo-tab-v1.0.1.zip` 的最新版本。
+5. 确认上传的软件包是本项目 `release/pomelo-tab-v1.0.2.zip` 的最新版本。
 6. 点击 **Submit for review / 提交审核**。
 
-提交审核会正式把当前版本发送给 Google。执行最后一步前，建议再次确认页面显示的版本号为 `1.0.1`。
+提交审核会正式把当前版本发送给 Google。执行最后一步前，建议再次确认页面显示的版本号为 `1.0.2`。

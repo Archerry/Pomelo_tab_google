@@ -249,7 +249,7 @@ function render() {
         <div class="hero-title"><h1><span id="greeting"></span>${state.name ? `, ${escapeHtml(state.name)}` : ''}</h1><p class="time" id="time"></p></div>
         <form class="search" id="search-form">
           ${icon('search')}
-          <input id="search-input" autocomplete="off" placeholder="Search Google or enter a URL" aria-label="Search Google or enter a URL" />
+          <input id="search-input" autocomplete="off" placeholder="Search with your default provider or enter a URL" aria-label="Search with your default provider or enter a URL" />
           <span class="search-spark">${icon('spark')}</span><kbd>↵</kbd>
         </form>
         <section class="quick-access">
